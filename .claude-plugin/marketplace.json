@@ -1,11 +1,9 @@
 {
   "name": "project-walkthrough-skill",
+  "description": "Structured technical walkthrough generator for any software project",
+  "version": "1.0.0",
   "owner": {
     "name": "zwyin"
-  },
-  "metadata": {
-    "description": "Structured technical walkthrough generator for any software project",
-    "version": "1.0.0"
   },
   "plugins": [
     {

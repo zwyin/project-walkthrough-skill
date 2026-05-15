@@ -33,6 +33,7 @@ sources-manifest.json 是 walkthrough 生成的强制产出物。它记录 walkt
 | generated_at | string (ISO 8601) | 是 | 生成时间戳 |
 | depth | string | 否 | "brief" / "medium" / "deep" |
 | audience | string | 否 | "general" / "dev" |
+| lang | string | 否 | "zh" / "en" |
 | claims | array | 是 | 已验证声明列表 |
 | unverified | array | 否 | 无法验证的声明列表 |
 

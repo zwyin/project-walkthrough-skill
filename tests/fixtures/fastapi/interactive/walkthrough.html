@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FastAPI 项目走读 — Brief</title>
+<style>
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#252836;--border:#2e3141;--text:#e2e4ed;--text2:#9da2b4;--accent:#059669;--accent2:#34d399;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;--orange:#f97316}
+html.light{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde0ea;--text:#1a1d27;--text2:#5c6070;--accent:#059669;--accent2:#047857}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+.theme-toggle{position:fixed;top:12px;right:12px;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px;display:flex;gap:4px;font-size:13px}
+.theme-toggle span{padding:4px 10px;border-radius:4px;cursor:pointer;color:var(--text2)}
+.theme-toggle span.active{background:var(--accent);color:#fff}
+.sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:50px 0 20px}
+.sidebar-title{padding:8px 16px;font-size:14px;font-weight:700;color:var(--accent);border-bottom:1px solid var(--border)}
+.sidebar-title span{display:block;font-size:11px;color:var(--text2);font-weight:400;margin-top:2px}
+.nav-item{display:block;padding:8px 16px;color:var(--text2);text-decoration:none;font-size:13px;cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:var(--surface2)}
+.nav-num{display:inline-block;width:20px;text-align:center;font-weight:600;margin-right:4px}
+.main{margin-left:220px;padding:40px 32px;max-width:860px}
+.section{display:none}
+.section.active{display:block}
+h1{font-size:24px;margin-bottom:4px}
+h1 .depth-badge{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--green);color:#000;font-weight:600;vertical-align:middle;margin-left:8px}
+p,.subtitle{color:var(--text2);margin-bottom:12px}
+.subtitle{font-size:15px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
+.card-title{font-weight:600;margin-bottom:8px}
+.code-block{background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:14px;margin:12px 0;font-family:'Fira Code',monospace;font-size:13px;overflow-x:auto;line-height:1.5;white-space:pre}
+html.light .code-block{background:#f6f8fa}
+.styled-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+.styled-table th,.styled-table td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+.styled-table th{background:var(--surface2);font-weight:600}
+.expandable{border:1px solid var(--border);border-radius:6px;margin:12px 0;overflow:hidden}
+.expandable-header{padding:10px 14px;background:var(--surface2);cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:500}
+.expandable-header .arrow{transition:transform .2s}
+.expandable-header.open .arrow{transform:rotate(90deg)}
+.expandable-body{display:none;padding:14px;border-top:1px solid var(--border)}
+.expandable-body.open{display:block}
+.flow{display:flex;flex-direction:column;align-items:center;gap:8px;margin:16px 0}
+.flow-node{padding:10px 20px;border-radius:6px;text-align:center;font-size:13px;font-weight:500;min-width:200px}
+.flow-node.process{background:var(--surface);border:1px solid var(--orange);color:var(--orange)}
+.flow-node.result{background:var(--surface);border:1px solid var(--green);color:var(--green)}
+.flow-arrow{color:var(--text2);font-size:18px}
+.section-nav{display:flex;justify-content:space-between;margin-top:40px;padding-top:20px;border-top:1px solid var(--border)}
+.section-nav button{padding:8px 20px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:13px}
+.section-nav button:hover{background:var(--accent);color:#fff}
+.quiz-option{display:block;width:100%;text-align:left;padding:10px 14px;margin:4px 0;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:13px}
+.quiz-option:hover:not(:disabled){border-color:var(--accent)}
+.quiz-option:disabled{cursor:default;opacity:.7}
+.quiz-option.correct{background:#22c55e20;border-color:var(--green);color:var(--green)}
+.quiz-option.wrong{background:#ef444420;border-color:var(--red);color:var(--red)}
+.quiz-feedback{margin:8px 0 16px;padding:8px 12px;border-radius:4px;font-size:13px}
+.quiz-feedback.correct{background:#22c55e15;color:var(--green)}
+.quiz-feedback.wrong{background:#ef444415;color:var(--red)}
+.mobile-toggle{display:none;position:fixed;top:12px;left:12px;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;color:var(--text);font-size:18px}
+@media(max-width:768px){.sidebar{display:none;position:fixed;z-index:50;width:240px}.sidebar.open{display:block}.main{margin-left:0;padding:60px 16px}.mobile-toggle{display:block}.flow-node{min-width:140px}}
+@media print{.sidebar,.theme-toggle,.mobile-toggle,.section-nav{display:none}.main{margin-left:0}.section{display:block!important}}
+</style>
+</head>
+<body>
+<div class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776;</div>
+<div class="theme-toggle" onclick="toggleTheme()"><span id="btn-dark" class="active">暗色</span><span id="btn-light">亮色</span></div>
+<nav class="sidebar" id="sidebar"></nav>
+<div class="main" id="main"></div>
+<script>
+function toggleTheme(){var h=document.documentElement,dk=document.getElementById('btn-dark'),lt=document.getElementById('btn-light');if(h.classList.contains('light')){h.classList.remove('light');dk.classList.add('active');lt.classList.remove('active');localStorage.setItem('theme','dark')}else{h.classList.add('light');lt.classList.add('active');dk.classList.remove('active');localStorage.setItem('theme','light')}}
+if(localStorage.getItem('theme')==='light'){document.documentElement.classList.add('light');document.getElementById('btn-light').classList.add('active');document.getElementById('btn-dark').classList.remove('active')}
+var chapters=[{id:'s0',num:'0',title:'阅读指南'},{id:'s1',num:'1',title:'总览'},{id:'s2',num:'2',title:'路由与参数'},{id:'s3',num:'3',title:'依赖注入'},{id:'s4',num:'4',title:'OpenAPI 生成'},{id:'s5',num:'5',title:'中间件与安全'},{id:'s6',num:'6',title:'创新总结'},{id:'sq',num:'Q',title:'Quiz'}];
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e}
+function buildSidebar(){var sb=document.getElementById('sidebar');var t=el('div','sidebar-title');t.textContent='FastAPI 走读';t.appendChild(el('span','','BRIEF'));sb.appendChild(t);chapters.forEach(function(ch){var a=el('a','nav-item'+(ch.id==='s0'?' active':''));a.setAttribute('data-section',ch.id);a.addEventListener('click',function(){showSection(ch.id)});a.appendChild(el('span','nav-num',ch.num));a.appendChild(document.createTextNode(ch.title));sb.appendChild(a)})}
+function showSection(id){document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active')});document.getElementById(id).classList.add('active');document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});var nav=document.querySelector('.nav-item[data-section="'+id+'"]');if(nav)nav.classList.add('active');document.getElementById('sidebar').classList.remove('open');window.scrollTo(0,0)}
+function navBtns(cur){var idx=chapters.findIndex(function(c){return c.id===cur});var prev=idx>0?chapters[idx-1].id:null;var next=idx<chapters.length-1?chapters[idx+1].id:null;var d=el('div','section-nav');if(prev){var b=el('button','','← 上一章');b.addEventListener('click',function(){showSection(prev)});d.appendChild(b)}else{d.appendChild(el('span'))}if(next){var b2=el('button','','下一章 →');b2.addEventListener('click',function(){showSection(next)});d.appendChild(b2)}return d}
+function makeTable(rows){var tb=el('table','styled-table');rows.forEach(function(row,i){var tr=el('tr');row.forEach(function(cell){tr.appendChild(i===0?el('th','',cell):el('td','',cell))});tb.appendChild(tr)});return tb}
+function toggleExpand(id){var e=document.getElementById(id);e.querySelector('.expandable-header').classList.toggle('open');e.querySelector('.expandable-body').classList.toggle('open')}
+function makeExpandable(title,bodyEl,id){var d=el('div','expandable');d.id=id;var hd=el('div','expandable-header');hd.appendChild(el('span','',title));var ar=el('span','arrow','▶');hd.appendChild(ar);hd.addEventListener('click',function(){toggleExpand(id)});var bd=el('div','expandable-body');bd.appendChild(bodyEl);d.appendChild(hd);d.appendChild(bd);return d}
+function buildSections(){var main=document.getElementById('main');
+var s0=el('div','section active');s0.id='s0';var h0=el('h1','','FastAPI 项目走读 ');h0.appendChild(el('span','depth-badge','BRIEF'));s0.appendChild(h0);s0.appendChild(el('p','subtitle','Python 类型标注驱动的 Web 框架 — 6 章概览'));
+var c0=el('div','card');c0.appendChild(el('div','card-title','适合谁'));var ul0=el('ul');['评估 FastAPI 是否适合项目','理解类型标注驱动的 API 设计','了解依赖注入和自动文档'].forEach(function(t){ul0.appendChild(el('li','',t))});c0.appendChild(ul0);s0.appendChild(c0);
+s0.appendChild(navBtns('s0'));main.appendChild(s0);
+var s1=el('div','section');s1.id='s1';s1.appendChild(el('h1','','总览'));s1.appendChild(el('p','subtitle','类型标注就是 API 定义，自动生成文档、校验、序列化'));
+var c1=el('div','card');c1.appendChild(el('div','card-title','核心价值'));c1.appendChild(el('p','','传统框架需要手写路由+校验+文档三遍。FastAPI 用 Python 类型标注同时产出三者。'));s1.appendChild(c1);
+s1.appendChild(el('pre','code-block','@app.get("/users/{user_id}")\nasync def read_user(user_id: int, q: str | None = None) -> User:\n    ...'));
+s1.appendChild(makeTable([['技术','用途'],['Python 3.10+','核心语言，type hints'],['Starlette','ASGI 基础层'],['Pydantic','数据校验+序列化'],['uvicorn','ASGI 服务器'],['httpx','测试客户端']]));
+s1.appendChild(navBtns('s1'));main.appendChild(s1);
+var s2=el('div','section');s2.id='s2';s2.appendChild(el('h1','','路由与参数'));s2.appendChild(el('p','subtitle','类型标注驱动的路由注册和自动参数解析'));
+s2.appendChild(makeTable([['参数形式','来源','示例'],['{param} 在路径','Path','user_id: int'],['有默认值','Query','q: str = None'],['Pydantic Model','Body','item: Item'],['Header()','Header','ua: str = Header()'],['Depends(fn)','依赖注入','db = Depends(get_db)']]));
+s2.appendChild(navBtns('s2'));main.appendChild(s2);
+var s3=el('div','section');s3.id='s3';s3.appendChild(el('h1','','依赖注入'));s3.appendChild(el('p','subtitle','声明式依赖解析，支持嵌套和异步'));
+var fl=el('div','flow');['分析函数签名','遇到 Depends(fn)','递归解析依赖','执行 endpoint'].forEach(function(t,i){fl.appendChild((function(){var n=el('div','flow-node process');n.textContent=t;return n})());if(i<3)fl.appendChild(el('div','flow-arrow','↓'))});fl.appendChild((function(){var n=el('div','flow-node result');n.textContent='清理 yield 依赖';return n})());s3.appendChild(fl);
+s3.appendChild(makeExpandable('嵌套依赖示例',el('pre','code-block','def get_token(header: str = Header()):\n    return token\n\ndef get_current_user(token=Depends(get_token)):\n    return user\n\n@app.get("/me")\nasync def me(user=Depends(get_current_user)):\n    return user\n# 解析顺序: get_token → get_current_user → me'),'ex-dep'));
+s3.appendChild(navBtns('s3'));main.appendChild(s3);
+var s4=el('div','section');s4.id='s4';s4.appendChild(el('h1','','OpenAPI 生成'));s4.appendChild(el('p','subtitle','代码即文档——自动产出 Swagger UI + ReDoc'));
+var fl4=el('div','flow');['遍历所有 route','提取参数+model','生成 JSON Schema','输出 OpenAPI JSON'].forEach(function(t,i){fl4.appendChild((function(){var n=el('div','flow-node process');n.textContent=t;return n})());if(i<3)fl4.appendChild(el('div','flow-arrow','↓'))});fl4.appendChild((function(){var n=el('div','flow-node result');n.textContent='Swagger UI + ReDoc';return n})());s4.appendChild(fl4);
+s4.appendChild(navBtns('s4'));main.appendChild(s4);
+var s5=el('div','section');s5.id='s5';s5.appendChild(el('h1','','中间件与安全'));s5.appendChild(el('p','subtitle','Starlette 中间件栈 + OAuth2/JWT 安全工具'));
+s5.appendChild(makeTable([['模块','用途'],['CORSMiddleware','跨域'],['GZipMiddleware','压缩'],['OAuth2PasswordBearer','OAuth2 认证'],['HTTPBearer','JWT Bearer token'],['APIKeyHeader','API Key 认证']]));
+s5.appendChild(navBtns('s5'));main.appendChild(s5);
+var s6=el('div','section');s6.id='s6';s6.appendChild(el('h1','','创新总结'));s6.appendChild(el('p','subtitle','重新定义了 Python Web 框架的开发体验'));
+['类型标注驱动——一个函数定义产出路由+校验+文档+序列化','自动 OpenAPI 文档——零维护成本的交互式 API 文档','声明式依赖注入——支持嵌套、异步、生成器清理','Pydantic 深度集成——校验和序列化委托给专业库','ASGI 异步优先——原生 async/await 支持'].forEach(function(text,i){var c=el('div','card');c.style.borderLeft='3px solid var(--accent)';c.appendChild(el('div','card-title',text));s6.appendChild(c)});
+s6.appendChild(makeTable([['维度','FastAPI','Flask','Django'],['异步','原生','需扩展','部分'],['自动文档','内置','需扩展','需扩展'],['依赖注入','内置','无','无'],['性能','极高','中等','中等']]));
+s6.appendChild(navBtns('s6'));main.appendChild(s6);
+var sq=el('div','section');sq.id='sq';sq.appendChild(el('h1','','Quiz'));
+var quizData=[
+{q:'FastAPI 的核心设计理念是什么？',o:['最快的 Python Web 框架','类型标注即 API 定义','最简单的 Web 框架','Django 的替代品'],c:1,e:'FastAPI 用 Python 类型标注同时产出路由、校验、文档、序列化。'},
+{q:'Depends() 的依赖注入支持什么特性？',o:['只支持同步函数','只支持单层依赖','嵌套依赖 + 异步 + 生成器清理','仅用于数据库连接'],c:2,e:'Depends 支持递归嵌套、async 函数、yield + finally 清理模式。'},
+{q:'FastAPI 的 OpenAPI 文档是怎么生成的？',o:['手写 YAML 配置','从类型标注和 Pydantic model 自动生成','需要额外的文档工具','只在生产环境生成'],c:1,e:'框架遍历所有路由，从函数签名和 Pydantic model 自动生成 OpenAPI schema。'},
+{q:'FastAPI 构建在哪个 ASGI 框架之上？',o:['Flask','Django','Starlette','Uvicorn'],c:2,e:'FastAPI 继承 Starlette，在其上添加了类型驱动的路由、依赖注入和 OpenAPI 生成。'},
+{q:'同一次请求中，同一个 Depends() 会被执行几次？',o:['每次使用都执行','只执行一次（结果缓存）','取决于参数数量','异步执行多次'],c:1,e:'FastAPI 在同一请求内缓存依赖结果，同一 Depends 只执行一次。'}
+];
+var qc=el('div','card');quizData.forEach(function(item,idx){var w=el('div');w.style.marginBottom='20px';w.appendChild((function(){var d=el('div');d.style.fontWeight='600';d.style.marginBottom='8px';d.textContent=(idx+1)+'. '+item.q;return d})());item.o.forEach(function(opt,oi){var btn=el('button','quiz-option',String.fromCharCode(65+oi)+'. '+opt);btn.addEventListener('click',function(){w.querySelectorAll('.quiz-option').forEach(function(b){b.disabled=true});var fb=el('div','quiz-feedback');if(oi===item.c){btn.classList.add('correct');fb.classList.add('correct');fb.textContent='正确！'+item.e}else{btn.classList.add('wrong');w.querySelectorAll('.quiz-option')[item.c].classList.add('correct');fb.classList.add('wrong');fb.textContent='不对。'+item.e}w.appendChild(fb)});w.appendChild(btn)});qc.appendChild(w)});sq.appendChild(qc);sq.appendChild(navBtns('sq'));main.appendChild(sq)}
+buildSidebar();buildSections();
+</script>
+</body>
+</html>

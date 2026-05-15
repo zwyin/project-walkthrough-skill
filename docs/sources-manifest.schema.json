@@ -48,6 +48,11 @@
       "enum": ["general", "dev"],
       "description": "Target audience mode"
     },
+    "lang": {
+      "type": "string",
+      "enum": ["zh", "en"],
+      "description": "Output language mode"
+    },
     "claims": {
       "type": "array",
       "description": "Verified claims with source references",

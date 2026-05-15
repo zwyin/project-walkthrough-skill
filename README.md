@@ -31,7 +31,7 @@
 
 ```bash
 git clone https://github.com/zwyin/project-walkthrough-skill.git
-claude --plugin-dir ./project-walkthrough-skill
+claude --plugin-dir ./project-walkthrough-skill  # 保留完整目录结构，路径引用不会断裂
 ```
 
 ### 其他平台
@@ -66,7 +66,7 @@ claude --plugin-dir ./project-walkthrough-skill
 
 **语法规则：** 空格分隔（`--depth medium`），不支持 `--depth=medium`。无效值回退到默认。重复 flag 取最后一次。flags 大小写敏感。
 
-> 详细解析规则见 `SKILL.md` Usage 部分。
+> 详细解析规则见 `skills/project-walkthrough/SKILL.md` Usage 部分。
 
 ## 输出结构
 
@@ -98,7 +98,7 @@ project_study_<project-name>/
 ## 测试
 
 ```bash
-pytest tests/ -v                    # 290 个测试（结构 + manifest + 引用）
+pytest tests/ -v                    # 单元测试 + 产出物结构验证
 python scripts/verify_sources.py --check-all examples/ --strict  # manifest 验证
 ```
 

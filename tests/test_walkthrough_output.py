@@ -2,7 +2,7 @@
 project-walkthrough skill 输出验证测试
 
 基于 SKILL.md 规范，验证 walkthrough 产出物的结构和质量。
-测试对象：examples/ 下的已生成走读实例。
+测试对象：tests/fixtures/（CI）或 examples/（本地开发）下的已生成走读实例。
 
 用法：
   pytest tests/test_walkthrough_output.py -v
@@ -16,12 +16,14 @@ import pytest
 from pathlib import Path
 
 SKILL_ROOT = Path(__file__).parent.parent
-EXAMPLES_DIR = SKILL_ROOT / "examples"
+EXAMPLES_DIR = (SKILL_ROOT / "tests" / "fixtures") if (SKILL_ROOT / "tests" / "fixtures").is_dir() and any((SKILL_ROOT / "tests" / "fixtures").iterdir()) else (SKILL_ROOT / "examples")
 
 # 完整三层产出的项目（有 brief + medium + deep）
-FULL_PROJECTS = ["gstack", "superpowers"]
+_CANDIDATE_FULL = ["gstack", "superpowers"]
+FULL_PROJECTS = [p for p in _CANDIDATE_FULL if (EXAMPLES_DIR / p).is_dir()]
 # 只有 brief 层的项目
-BRIEF_ONLY_PROJECTS = ["zod", "fastapi", "bat"]
+_CANDIDATE_BRIEF = ["zod", "fastapi", "bat"]
+BRIEF_ONLY_PROJECTS = [p for p in _CANDIDATE_BRIEF if (EXAMPLES_DIR / p).is_dir()]
 ALL_PROJECTS = FULL_PROJECTS + BRIEF_ONLY_PROJECTS
 
 # ─── 目录结构 ───────────────────────────────────────────────
@@ -363,10 +365,11 @@ class TestHTML:
 # ─── v2 版本测试 ──────────────────────────────────────────────
 
 
+@pytest.mark.skipif(not any((EXAMPLES_DIR / p / "v2").is_dir() for p in _CANDIDATE_FULL), reason="no v2 fixtures")
 class TestV2Output:
     """v2 版本产出测试 — 仅有 interactive HTML，无 docs"""
 
-    @pytest.fixture(params=["gstack", "superpowers"])
+    @pytest.fixture(params=[p for p in _CANDIDATE_FULL if (EXAMPLES_DIR / p / "v2").is_dir()])
     def v2_dir(self, request):
         return EXAMPLES_DIR / request.param / "v2"
 
@@ -393,13 +396,14 @@ class TestV2Output:
 # ─── v1 旧版兼容测试 ───────────────────────────────────────
 
 
+@pytest.mark.skipif(not any((EXAMPLES_DIR / p / "v1").is_dir() for p in _CANDIDATE_FULL), reason="no v1 fixtures")
 class TestV1Output:
     """v1 版本产出也应有基本质量保证"""
 
     V1_VARIANTS = ["brief-general", "brief-dev", "medium-general", "medium-dev",
                    "deep-general", "deep-dev"]
 
-    @pytest.fixture(params=["gstack", "superpowers"])
+    @pytest.fixture(params=[p for p in _CANDIDATE_FULL if (EXAMPLES_DIR / p / "v1").is_dir()])
     def project_dir(self, request):
         return EXAMPLES_DIR / request.param / "v1"
 

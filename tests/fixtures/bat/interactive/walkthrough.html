@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bat 项目走读 — Brief</title>
+<style>
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#252836;--border:#2e3141;--text:#e2e4ed;--text2:#9da2b4;--accent:#d97706;--accent2:#fbbf24;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;--orange:#f97316}
+html.light{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde0ea;--text:#1a1d27;--text2:#5c6070;--accent:#d97706;--accent2:#b45309}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+.theme-toggle{position:fixed;top:12px;right:12px;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px;display:flex;gap:4px;font-size:13px}
+.theme-toggle span{padding:4px 10px;border-radius:4px;cursor:pointer;color:var(--text2)}
+.theme-toggle span.active{background:var(--accent);color:#fff}
+.sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:50px 0 20px}
+.sidebar-title{padding:8px 16px;font-size:14px;font-weight:700;color:var(--accent);border-bottom:1px solid var(--border)}
+.sidebar-title span{display:block;font-size:11px;color:var(--text2);font-weight:400;margin-top:2px}
+.nav-item{display:block;padding:8px 16px;color:var(--text2);text-decoration:none;font-size:13px;cursor:pointer;border-left:3px solid transparent}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:var(--surface2)}
+.nav-num{display:inline-block;width:20px;text-align:center;font-weight:600;margin-right:4px}
+.main{margin-left:220px;padding:40px 32px;max-width:860px}
+.section{display:none}
+.section.active{display:block}
+h1{font-size:24px;margin-bottom:4px}
+h1 .depth-badge{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--green);color:#000;font-weight:600;vertical-align:middle;margin-left:8px}
+p,.subtitle{color:var(--text2);margin-bottom:12px}
+.subtitle{font-size:15px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
+.card-title{font-weight:600;margin-bottom:8px}
+.code-block{background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:14px;margin:12px 0;font-family:'Fira Code',monospace;font-size:13px;overflow-x:auto;line-height:1.5;white-space:pre}
+html.light .code-block{background:#f6f8fa}
+.styled-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+.styled-table th,.styled-table td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+.styled-table th{background:var(--surface2);font-weight:600}
+.expandable{border:1px solid var(--border);border-radius:6px;margin:12px 0;overflow:hidden}
+.expandable-header{padding:10px 14px;background:var(--surface2);cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:500}
+.expandable-header .arrow{transition:transform .2s}
+.expandable-header.open .arrow{transform:rotate(90deg)}
+.expandable-body{display:none;padding:14px;border-top:1px solid var(--border)}
+.expandable-body.open{display:block}
+.flow{display:flex;flex-direction:column;align-items:center;gap:8px;margin:16px 0}
+.flow-node{padding:10px 20px;border-radius:6px;text-align:center;font-size:13px;font-weight:500;min-width:200px}
+.flow-node.process{background:var(--surface);border:1px solid var(--orange);color:var(--orange)}
+.flow-node.result{background:var(--surface);border:1px solid var(--green);color:var(--green)}
+.flow-arrow{color:var(--text2);font-size:18px}
+.section-nav{display:flex;justify-content:space-between;margin-top:40px;padding-top:20px;border-top:1px solid var(--border)}
+.section-nav button{padding:8px 20px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:13px}
+.section-nav button:hover{background:var(--accent);color:#fff}
+.quiz-option{display:block;width:100%;text-align:left;padding:10px 14px;margin:4px 0;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:13px}
+.quiz-option:hover:not(:disabled){border-color:var(--accent)}
+.quiz-option:disabled{cursor:default;opacity:.7}
+.quiz-option.correct{background:#22c55e20;border-color:var(--green);color:var(--green)}
+.quiz-option.wrong{background:#ef444420;border-color:var(--red);color:var(--red)}
+.quiz-feedback{margin:8px 0 16px;padding:8px 12px;border-radius:4px;font-size:13px}
+.quiz-feedback.correct{background:#22c55e15;color:var(--green)}
+.quiz-feedback.wrong{background:#ef444415;color:var(--red)}
+.mobile-toggle{display:none;position:fixed;top:12px;left:12px;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;color:var(--text);font-size:18px}
+@media(max-width:768px){.sidebar{display:none;position:fixed;z-index:50;width:240px}.sidebar.open{display:block}.main{margin-left:0;padding:60px 16px}.mobile-toggle{display:block}.flow-node{min-width:140px}}
+@media print{.sidebar,.theme-toggle,.mobile-toggle,.section-nav{display:none}.main{margin-left:0}.section{display:block!important}}
+</style>
+</head>
+<body>
+<div class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776;</div>
+<div class="theme-toggle" onclick="toggleTheme()"><span id="btn-dark" class="active">暗色</span><span id="btn-light">亮色</span></div>
+<nav class="sidebar" id="sidebar"></nav>
+<div class="main" id="main"></div>
+<script>
+function toggleTheme(){var h=document.documentElement,dk=document.getElementById('btn-dark'),lt=document.getElementById('btn-light');if(h.classList.contains('light')){h.classList.remove('light');dk.classList.add('active');lt.classList.remove('active');localStorage.setItem('theme','dark')}else{h.classList.add('light');lt.classList.add('active');dk.classList.remove('active');localStorage.setItem('theme','light')}}
+if(localStorage.getItem('theme')==='light'){document.documentElement.classList.add('light');document.getElementById('btn-light').classList.add('active');document.getElementById('btn-dark').classList.remove('active')}
+var chapters=[{id:'s0',num:'0',title:'阅读指南'},{id:'s1',num:'1',title:'总览'},{id:'s2',num:'2',title:'输入与配置'},{id:'s3',num:'3',title:'语法高亮'},{id:'s4',num:'4',title:'Git 与分页'},{id:'s5',num:'5',title:'创新总结'},{id:'sq',num:'Q',title:'Quiz'}];
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e}
+function buildSidebar(){var sb=document.getElementById('sidebar');var t=el('div','sidebar-title');t.textContent='bat 走读';t.appendChild(el('span','','BRIEF'));sb.appendChild(t);chapters.forEach(function(ch){var a=el('a','nav-item'+(ch.id==='s0'?' active':''));a.setAttribute('data-section',ch.id);a.addEventListener('click',function(){showSection(ch.id)});a.appendChild(el('span','nav-num',ch.num));a.appendChild(document.createTextNode(ch.title));sb.appendChild(a)})}
+function showSection(id){document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active')});document.getElementById(id).classList.add('active');document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});var nav=document.querySelector('.nav-item[data-section="'+id+'"]');if(nav)nav.classList.add('active');document.getElementById('sidebar').classList.remove('open');window.scrollTo(0,0)}
+function navBtns(cur){var idx=chapters.findIndex(function(c){return c.id===cur});var prev=idx>0?chapters[idx-1].id:null;var next=idx<chapters.length-1?chapters[idx+1].id:null;var d=el('div','section-nav');if(prev){var b=el('button','','← 上一章');b.addEventListener('click',function(){showSection(prev)});d.appendChild(b)}else{d.appendChild(el('span'))}if(next){var b2=el('button','','下一章 →');b2.addEventListener('click',function(){showSection(next)});d.appendChild(b2)}return d}
+function makeTable(rows){var tb=el('table','styled-table');rows.forEach(function(row,i){var tr=el('tr');row.forEach(function(cell){tr.appendChild(i===0?el('th','',cell):el('td','',cell))});tb.appendChild(tr)});return tb}
+function toggleExpand(id){var e=document.getElementById(id);e.querySelector('.expandable-header').classList.toggle('open');e.querySelector('.expandable-body').classList.toggle('open')}
+function makeExpandable(title,bodyEl,id){var d=el('div','expandable');d.id=id;var hd=el('div','expandable-header');hd.appendChild(el('span','',title));var ar=el('span','arrow','▶');hd.appendChild(ar);hd.addEventListener('click',function(){toggleExpand(id)});var bd=el('div','expandable-body');bd.appendChild(bodyEl);d.appendChild(hd);d.appendChild(bd);return d}
+function buildSections(){var main=document.getElementById('main');
+var s0=el('div','section active');s0.id='s0';var h0=el('h1','','bat 项目走读 ');h0.appendChild(el('span','depth-badge','BRIEF'));s0.appendChild(h0);s0.appendChild(el('p','subtitle','Rust 写的 cat 替代品 — 语法高亮 + Git + 分页'));
+var c0=el('div','card');c0.appendChild(el('div','card-title','适合谁'));var ul0=el('ul');['理解 bat 的设计和实现','学习 Rust CLI 工具架构','了解语法高亮和分页器的实现'].forEach(function(t){ul0.appendChild(el('li','',t))});c0.appendChild(ul0);s0.appendChild(c0);
+s0.appendChild(navBtns('s0'));main.appendChild(s0);
+var s1=el('div','section');s1.id='s1';s1.appendChild(el('h1','','总览'));s1.appendChild(el('p','subtitle','cat(1) clone with wings — 语法高亮 + Git 集成 + 自动分页'));
+var c1=el('div','card');c1.appendChild(el('div','card-title','核心价值'));c1.appendChild(el('p','','cat 命令 50 年没变——无高亮、无行号、无 Git 感知。bat 用 Rust 重写了文件查看体验。'));s1.appendChild(c1);
+s1.appendChild(makeTable([['技术','用途'],['Rust 1.88+','核心语言'],['syntect','语法高亮 (TextMate)'],['clap','CLI 参数解析'],['git2','Git 集成'],['minus','内置分页器']]));
+s1.appendChild(navBtns('s1'));main.appendChild(s1);
+var s2=el('div','section');s2.id='s2';s2.appendChild(el('h1','','输入与配置'));s2.appendChild(el('p','subtitle','多种输入源 + 三层配置合并'));
+s2.appendChild(makeTable([['输入类型','处理方式'],['文件路径','读取 + 编码检测'],['stdin/管道','缓冲读取'],['目录','跳过提示']]));
+s2.appendChild(makeExpandable('配置优先级',el('pre','code-block','1. CLI 参数 (--style, --theme)\n2. 环境变量 (BAT_STYLE, BAT_THEME)\n3. 配置文件 (~/.config/bat/config)'),'ex-cfg'));
+s2.appendChild(navBtns('s2'));main.appendChild(s2);
+var s3=el('div','section');s3.id='s3';s3.appendChild(el('h1','','语法高亮'));s3.appendChild(el('p','subtitle','基于 syntect 的 TextMate 语法高亮引擎'));
+var fl=el('div','flow');['语言检测','语法加载','Tokenize','Theme 应用','ANSI 输出'].forEach(function(t,i){fl.appendChild((function(){var n=el('div','flow-node process');n.textContent=t;return n})());if(i<4)fl.appendChild(el('div','flow-arrow','↓'))});s3.appendChild(fl);
+s3.appendChild(makeExpandable('语言检测链',el('pre','code-block','1. --language 参数 (显式)\n2. 自定义映射 (--map-syntax)\n3. 文件扩展名\n4. shebang 行\n5. 内容嗅探\n6. 纯文本回退'),'ex-lang'));
+s3.appendChild(navBtns('s3'));main.appendChild(s3);
+var s4=el('div','section');s4.id='s4';s4.appendChild(el('h1','','Git 与分页'));s4.appendChild(el('p','subtitle','Git 变更标记 + 智能分页策略'));
+s4.appendChild(makeTable([['分页模式','说明'],['never','直接 stdout'],['always','总是分页'],['auto','输出 > 终端高度时自动分页']]));
+s4.appendChild(makeExpandable('分页器选择链',el('pre','code-block','1. 内置分页器 (minus)\n2. BAT_PAGER 环境变量\n3. PAGER 环境变量\n4. less -RF (默认)'),'ex-pager'));
+s4.appendChild(navBtns('s4'));main.appendChild(s4);
+var s5=el('div','section');s5.id='s5';s5.appendChild(el('h1','','创新总结'));s5.appendChild(el('p','subtitle','50 年没变的基础工具也可以重新设计'));
+['语法高亮的文件查看 — IDE 级高亮带到终端','Git 原生集成 — 看文件时就能看到变更','智能分页 — cat 短 less 长的痛点一次解决','三层配置 — CLI > 环境变量 > 配置文件','资源缓存 — 语法集编译一次，后续零开销'].forEach(function(text,i){var c=el('div','card');c.style.borderLeft='3px solid var(--accent)';c.appendChild(el('div','card-title',text));s5.appendChild(c)});
+s5.appendChild(makeTable([['维度','bat','cat','less','pygmentize'],['高亮','内置','无','无','有'],['Git','内置','无','无','无'],['分页','自动','无','是','无'],['速度','极快','极快','快','慢(Python)']]));
+s5.appendChild(navBtns('s5'));main.appendChild(s5);
+var sq=el('div','section');sq.id='sq';sq.appendChild(el('h1','','Quiz'));
+var quizData=[
+{q:'bat 的语法高亮使用什么引擎？',o:['Tree-sitter','syntect (TextMate)','Prism','Pygments'],c:1,e:'bat 使用 syntect，它解析 TextMate .tmLanguage 语法文件，和 VS Code 同源。'},
+{q:'配置优先级从高到低的正确顺序是？',o:['配置文件 > 环境变量 > CLI','CLI > 配置文件 > 环境变量','CLI > 环境变量 > 配置文件','环境变量 > CLI > 配置文件'],c:2,e:'CLI 参数优先级最高，然后是环境变量 (BAT_STYLE 等)，最后是配置文件。'},
+{q:'分页器 auto 模式什么时候启动分页？',o:['总是启动','输出到终端且行数超过终端高度','只在文件超过 1MB 时','只在 Git 仓库中'],c:1,e:'auto 模式检测：输出到终端 + 行数 > 终端高度 → 自动分页。管道模式直接输出。'},
+{q:'bat 的 Git 变更标记是通过什么库实现的？',o:['调用 git diff 命令','git2 (libgit2 Rust 绑定)','自定义 Git 实现','shell 脚本'],c:1,e:'bat 使用 git2 库原生比较工作区文件与 HEAD 版本，不需要调用外部 git 命令。'},
+{q:'用户自定义语法文件放在哪个目录？',o:['~/.bat/syntaxes/','~/.config/bat/syntaxes/','/etc/bat/syntaxes/','~/.local/share/bat/'],c:1,e:'自定义 TextMate 语法放入 ~/.config/bat/syntaxes/，bat 会自动编译并缓存。'}
+];
+var qc=el('div','card');quizData.forEach(function(item,idx){var w=el('div');w.style.marginBottom='20px';w.appendChild((function(){var d=el('div');d.style.fontWeight='600';d.style.marginBottom='8px';d.textContent=(idx+1)+'. '+item.q;return d})());item.o.forEach(function(opt,oi){var btn=el('button','quiz-option',String.fromCharCode(65+oi)+'. '+opt);btn.addEventListener('click',function(){w.querySelectorAll('.quiz-option').forEach(function(b){b.disabled=true});var fb=el('div','quiz-feedback');if(oi===item.c){btn.classList.add('correct');fb.classList.add('correct');fb.textContent='正确！'+item.e}else{btn.classList.add('wrong');w.querySelectorAll('.quiz-option')[item.c].classList.add('correct');fb.classList.add('wrong');fb.textContent='不对。'+item.e}w.appendChild(fb)});w.appendChild(btn)});qc.appendChild(w)});sq.appendChild(qc);sq.appendChild(navBtns('sq'));main.appendChild(sq)}
+buildSidebar();buildSections();
+</script>
+</body>
+</html>
