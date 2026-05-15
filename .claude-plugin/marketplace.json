@@ -1,6 +1,8 @@
 {
   "name": "project-walkthrough-skill",
-  "owner": "zwyin",
+  "owner": {
+    "name": "zwyin"
+  },
   "plugins": [
     {
       "name": "project-walkthrough",
