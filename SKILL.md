@@ -1,0 +1,363 @@
+---
+name: project-walkthrough
+description: Generate a structured technical walkthrough of any software project at configurable depth and audience levels. Outputs markdown docs + interactive HTML. Use when user wants to study, document, or share analysis of a codebase.
+argument-hint: "[path] [--depth brief|medium|deep|all] [--audience general|dev]"
+---
+
+# Project Walkthrough Generator
+
+Generate a structured technical walkthrough of any software project.
+
+## Usage
+
+```
+/project-walkthrough [path] [--depth brief|medium|deep|all] [--audience general|dev]
+```
+
+**Argument parsing:** Parse `$ARGUMENTS` using `--flag` convention:
+
+1. Split `$ARGUMENTS` by whitespace into tokens; empty-string tokens are discarded; paths with spaces are not supported
+2. Tokens starting with `--` are flags:
+   - `--depth <value>` — sets depth (`brief`, `medium`, `deep`, `all`)
+   - `--audience <value>` — sets audience (`general`, `dev`)
+   - Only space-separated `--flag value` syntax is supported (not `--flag=value`)
+   - Flags are case-sensitive (`--Depth` is not `--depth`)
+   - A flag always consumes exactly the next token as its value, regardless of what that token contains
+   - If a flag is the last token (no value follows), ignore it and use the default
+   - If the same flag appears multiple times, the **last** occurrence wins
+   - Unknown `--` flags are ignored along with their immediately following token
+   - If a recognized flag receives an invalid value (not in the allowed set), discard the value and use the default
+3. The first non-flag token that is not consumed as a flag value is the `path`
+4. Additional non-flag tokens are ignored
+5. Flags can appear before or after the path
+6. Defaults: path → current working directory, depth → `brief`, audience → `general`
+
+**Parameters:**
+- `path` (positional, optional) — Project directory. Defaults to current working directory.
+- `--depth` (optional) — One of: `brief`, `medium`, `deep`, `all`. Defaults to `brief`.
+- `--audience` (optional) — One of: `general`, `dev`. Defaults to `general`.
+
+Invalid or missing flag values fall back to defaults. If a flag is repeated, the last occurrence wins.
+
+**Examples:**
+```
+/project-walkthrough                                              # Brief + general (CWD)
+/project-walkthrough /path/to/project                             # Brief + general
+/project-walkthrough /path/to/project --depth medium              # Medium + general
+/project-walkthrough /path/to/project --depth deep --audience dev # Deep + dev
+/project-walkthrough --depth deep                                 # Deep + general (CWD)
+/project-walkthrough --audience dev                               # Brief + dev (CWD)
+/project-walkthrough --depth all --audience dev                   # All depths + dev (CWD)
+/project-walkthrough ./deep --depth brief                         # Path "./deep", brief + general
+```
+
+## Audience Modes
+
+### `general` (default)
+
+For anyone — technical or not. Every technical concept gets a **类比理解** card that explains it using everyday analogies. Code blocks get a plain-language summary above them. The goal: a non-technical stakeholder can read the deep walkthrough and understand the architecture.
+
+What changes:
+- Every technical term gets an analogy on first appearance (e.g. "Prompt 注入 ≈ 钓鱼邮件，但骗的是 AI 不是人")
+- Code blocks get a "这段代码在做什么" plain-language summary before the code
+- Tables use plain column headers (not jargon)
+- Quiz explanations are conversational
+- Architecture diagrams get a one-sentence caption
+
+### `dev`
+
+For software engineers. Technical terms used directly, code blocks analyzed line by line, no analogy overhead. Best for contributors and architects evaluating the approach.
+
+## Depth Levels
+
+### Brief (~30 min to produce)
+
+High-level overview for quick understanding. 7-8 doc files + 1 interactive HTML.
+
+Chapters:
+1. Project overview (what, why, tech stack)
+2. Architecture summary (components + data flow)
+3. Key technical highlights (3-5 innovations)
+4. Core workflow walkthrough
+5. Comparison with alternatives (if applicable)
+6. Summary + recommended next steps
+7. (Optional) bonus chapter unique to project type
+
+Quiz: 5-7 questions.
+
+**For:** Quick orientation, executive summary, deciding whether to invest more time.
+
+### Medium (~60 min to produce)
+
+Deeper analysis with code examples and design rationale. 12-15 doc files + 1 interactive HTML.
+
+Everything in Brief, plus:
+- Source code walkthrough with key file excerpts
+- Design patterns and "why this way, not that way" sections
+- Detailed component interaction diagrams
+- Implementation details for each major subsystem
+- Testing and CI/CD strategy
+- Developer workflow
+
+Quiz: 10-12 questions with explanations.
+
+**For:** Engineers onboarding to the project, architects evaluating the approach.
+
+### Deep (~120 min to produce)
+
+Comprehensive analysis suitable for a course or reference guide. 8-15 doc files + 1 interactive HTML.
+
+Everything in Medium, plus:
+- Line-by-line analysis of core algorithms
+- Complete security model documentation (if applicable)
+- Performance characteristics and benchmarks
+- Error handling and edge cases
+- Configuration system deep dive
+- Design evolution (why decisions changed over time)
+- "Build your own X" reimplementation guide
+- Cross-cutting concerns (logging, observability)
+
+Quiz: 15-20 questions with explanations.
+
+**For:** Contributors, security auditors, developers building similar systems.
+
+### `all`
+
+Generate all three depth levels sequentially. Starts with brief, then medium, then deep. Each level produces its own set of markdown files and HTML. Medium and deep can reuse exploration results from brief.
+
+**Verification for `all` mode:** When reusing claims from an earlier level, re-verify any that were tagged `[UNVERIFIED]` during exploration. Do not assume brief-level verification is sufficient for deep-level claims.
+
+## Output Structure
+
+```
+project_study_<project-name>/
+├── docs/
+│   ├── 01-overview.md              ← Brief level (flat, no subdirectory)
+│   ├── 02-*.md
+│   ├── ...
+│   ├── sources-manifest.json       ← Brief level manifest (MANDATORY)
+│   ├── medium/                     ← Medium level
+│   │   ├── 01-overview.md
+│   │   ├── 02-*.md
+│   │   ├── ...
+│   │   └── sources-manifest.json   ← Medium level manifest (MANDATORY)
+│   └── deep/                       ← Deep level
+│       ├── 01-overview.md
+│       ├── 02-*.md
+│       ├── ...
+│       └── sources-manifest.json   ← Deep level manifest (MANDATORY)
+└── interactive/
+    ├── walkthrough.html            ← Brief
+    ├── medium-walkthrough.html    ← Medium
+    └── deep-walkthrough.html      ← Deep
+```
+
+**Naming conventions:**
+- Brief docs go in `docs/` (flat, no subdirectory)
+- Medium docs go in `docs/medium/`
+- Deep docs go in `docs/deep/`
+- Each file: `NN-kebab-case-title.md` (zero-padded number, descriptive name)
+- Each file ends with a navigation link to the next file
+
+## Process
+
+### Phase 1: Explore (~15% of time)
+
+Follow the protocol in `docs/exploration-protocol.md`. In summary:
+
+1. **Identify project type** — AI tool / Library / Web app / CLI tool
+2. **Read core files** — README, ARCHITECTURE, CLAUDE.md/GEMINI.md, package.json, config files
+3. **Read key source files** — Main entry points, core modules, configuration
+4. **Extract innovations** — 3-5 unique design decisions or techniques
+5. **Map architecture** — Components, data flow, dependencies
+
+**Critical:** Do NOT skip this phase. The quality of the entire walkthrough depends on thorough exploration.
+
+### Phase 2: Plan (~10% of time)
+
+1. **Select chapter template** from `docs/chapter-templates.md` based on project type
+2. **Adapt template** to the specific project — rename, reorder, add project-specific chapters
+3. **Map each chapter to source files** — which files provide the content for each chapter
+4. **Plan cross-references** — which chapters reference which others
+
+### Phase 3: Generate Markdown (~40% of time)
+
+**CRITICAL ORDERING RULE: Verify before write.** Content generation is split into two gated sub-phases. You may NOT write chapter content until you have verified the claims for that chapter and recorded them in the manifest. The manifest is a **write permit**, not an audit log.
+
+#### Phase 3A: Verify & Build Manifest (per chapter)
+
+For each chapter, BEFORE writing any content:
+
+1. **List planned claims** — What code examples will you show? What directory structures? What API signatures? What version numbers? What architecture statements?
+2. **Read the source files** — For each planned claim, read the ACTUAL source file. Not from memory, not from README. Read the file.
+3. **Verify each claim against source:**
+   - Code block: Read the actual source file, find the EXACT lines, copy verbatim. If you simplify, note what changed. If the function/method you want to cite does NOT exist in the file, STOP — do not write it. Find what actually exists.
+   - Directory structure: `ls` the actual directory. Every path you plan to list must exist. Do not infer from naming conventions.
+   - API signature: Read the actual function definition (not call sites, not tests). Check parameters, return types, generics. If the function is generic-heavy, simplify but note the simplification.
+   - Version number: Read from `package.json` / `Cargo.toml` / `pyproject.toml`. Copy the exact value. Never from README.
+   - Enum/variant lists: When listing enum values, feature flags, or config options, read the actual enum/const definition. Do not list from memory. Missing items are acceptable; wrong items are not.
+   - Count claims: Do NOT count manually. Run a command and record the output in the manifest's verification_note:
+     ```
+     grep -c "^export " src/types.ts     # count exports
+     ls src/modules/ | wc -l              # count directory entries
+     wc -l src/schemas.ts                 # count lines
+     ```
+     For files > 2,000 lines, use ranges ("40+") or vague language ("dozens of").
+   - Architecture claim: Find the source file that supports this claim. Record the file and line range. If the claim is "X calls Y" or "X is used by Z", verify the actual import/call, not just that both files exist.
+   - Architecture diagrams: Run `python scripts/import_graph.py <source_dir>` to extract the ACTUAL import dependency graph. Draw diagrams from the script output, NOT from directory structure. The script detects parallel siblings (modules sharing a dependency without importing each other).
+   - Dependency: Find the actual import statement in source. Record it.
+   - Priority/ordering chains: When describing fallback chains (e.g., "config priority: CLI > env > file"), read the actual code that implements this chain. Do not assume the order.
+   - Source citation accuracy: Always use `// Simplified from: path:lines`. Do NOT use `// Source:`.
+   - Line ranges: Verify by running `wc -l <source_file>` before finalizing. End line must be <= file's total lines.
+4. **Create manifest entries** for verified claims. Each entry records: source file, line range, verification status.
+5. **Drop unverifiable claims.** If you cannot verify a claim, you CANNOT include it in the walkthrough. No exceptions. Replace it with a verified claim, or use plain language without specifics.
+
+**Output of Phase 3A:** A `sources-manifest.json` with all verified claims populated. `doc_file` and `doc_line` will be filled in Phase 3B.
+
+**Manifest schema:** See `docs/sources-manifest-schema.md` for human-readable docs, or `docs/sources-manifest.schema.json` for the machine-readable JSON Schema. Each entry has:
+- `id` — unique identifier (claim-001, claim-002, ...)
+- `type` — one of: `code_example`, `directory_structure`, `api_signature`, `version_number`, `architecture_claim`, `dependency_claim`, `config_claim`, `feature_claim`, `performance_claim`
+- `source_file` + `source_lines` — exact file path and line range in the source project
+- `claim_summary` — one-sentence description of what's claimed
+- `verified` — must be `true` at this stage (unverified claims go in `unverified` array and are excluded from content)
+- `verification_note` — how you verified (e.g., "exact match", "simplified for clarity")
+
+**Minimum coverage per chapter:**
+- Every code block you plan to write → `code_example` entry with source file + lines
+- Every directory tree → `directory_structure` entry verified by `ls`
+- Every function signature → `api_signature` entry verified by reading the definition
+- Every version number → `version_number` entry verified from config file
+- Every "module X does Y" → `architecture_claim` entry with supporting source
+
+#### Phase 3B: Write Chapter Content (per chapter)
+
+For each chapter, using ONLY claims verified in Phase 3A:
+
+1. **Write the chapter** — one file per chapter, numbered sequentially
+2. **Every code block must cite its manifest entry** — add a comment above each code block using `// Simplified from: path:lines`. Do NOT use `// Source:` at all. All code in walkthroughs is simplified to some degree (indentation changed, comments omitted, context removed). `Simplified from:` is always honest. `Source:` requires character-for-character verification which is error-prone and has caused the most issues in testing.
+3. **Apply audience mode:**
+   - `general`: add 类比理解 cards, plain-language code summaries
+   - `dev`: direct technical analysis
+4. **Navigation links** at the bottom of each file
+5. **Update manifest** — fill in `doc_file` and `doc_line` for each claim as you write
+
+**Hard rule:** If a claim is NOT in the manifest with `verified: true`, you CANNOT write it in the chapter. This is the structural enforcement. No "I'll verify later." No "I'm pretty sure." If it's not verified, it doesn't get written.
+
+#### Phase 3C: Validate Coverage
+
+After all chapters are written:
+
+1. **Read back each chapter** — scan for code blocks, directory trees, version numbers, API signatures
+2. **Cross-check against manifest** — every factual statement must have a manifest entry
+3. **Fill any gaps** — if you wrote something without a manifest entry, go verify it now and add the entry
+4. **Line range audit** — For every claim with `source_lines`, re-read the source file and confirm:
+   - The end line number is <= the file's total line count (no off-by-one errors)
+   - The range covers the code you described (not too narrow, not exceeding file bounds)
+   - When in doubt, use a smaller range
+5. **Run verification script** — `python scripts/verify_sources.py <manifest> --source-dir <source>` must pass
+
+#### If `all` depth
+
+Generate all three depth levels sequentially: brief → medium → deep. Medium and deep must re-verify any claims reused from earlier levels — do not assume brief-level verification is sufficient.
+
+#### Accuracy Rules
+
+All accuracy rules are enforced through Phase 3A's verification steps above. The key principles:
+
+1. **No invented code** — every code example from actual source, cited with `// Simplified from:`
+2. **Verify before stating** — read the actual file, not README, not memory
+3. **Admit uncertainty** — if you can't verify, use plain language, not plausible descriptions
+4. **Architecture diagrams are source-grounded** — every arrow traced to actual import/call
+5. **Drop unverifiable claims** — if Phase 3A can't verify it, it doesn't get written
+
+For the detailed verification procedure for each claim type (code blocks, directories, API signatures, versions, architecture), see Phase 3A step 3 above.
+
+### Phase 4: Generate HTML (~30% of time)
+
+1. One self-contained HTML file per depth level
+2. Follow the structure in `docs/html-reference.md`
+3. Key requirements:
+   - DOM API only (createElement, textContent, addEventListener) — **never innerHTML**
+   - Dark/light toggle (localStorage)
+   - Left sidebar navigation
+   - Expandable detail sections
+   - CSS flow diagrams
+   - Quiz with instant feedback
+   - Mobile responsive
+   - Print-friendly
+
+### Phase 5: Verify (~5% of time)
+
+1. File count matches expectations
+2. File naming is consistent
+3. Navigation links between chapters are correct
+4. HTML has no syntax errors
+5. Quiz answers are correct
+6. All expandable sections have content
+7. **sources-manifest.json exists** for each depth level
+8. **Manifest coverage:** every code block has a corresponding `code_example` entry
+9. **Manifest validity:** spot-check 3+ entries — source file exists, line range is valid, content matches claim
+
+## Documentation Standards
+
+See `docs/documentation-standards.md` for:
+- Language conventions (Chinese/English/technical terms)
+- Chapter structure requirements
+- Source citation format (`// Simplified from: path:lines`)
+- Audience-specific formatting (general: analogy cards + code summaries; dev: inline analysis)
+
+## Checklist
+
+### Exploration
+- [ ] Identified project type (AI tool / Library / Web app / CLI tool)
+- [ ] Read README, ARCHITECTURE, CLAUDE.md (or equivalent)
+- [ ] Read package.json / config files for dependencies and scripts
+- [ ] Read main entry points and core modules
+- [ ] Extracted 3-5 unique innovations or design decisions
+- [ ] Mapped component architecture
+
+### Planning
+- [ ] Selected chapter template based on project type
+- [ ] Adapted template to project specifics
+- [ ] Mapped each chapter to source files
+
+### Content
+- [ ] Markdown files generated at requested depth(s)
+- [ ] File naming follows NN-kebab-case-title.md convention
+- [ ] Each file has navigation links
+- [ ] Audience mode applied (general: analogies + summaries; dev: direct analysis)
+- [ ] Code examples are from actual source (not fabricated)
+- [ ] Every code block has a source file citation
+- [ ] Architecture diagrams included
+
+### Sources Manifest
+- [ ] `sources-manifest.json` exists for each generated depth level
+- [ ] Every code block has a `code_example` entry in the manifest
+- [ ] Every directory structure diagram has a `directory_structure` entry
+- [ ] Every version number has a `version_number` entry
+- [ ] Every API signature has an `api_signature` entry
+- [ ] Spot-checked 3+ manifest entries: source file exists, line range valid, content matches
+- [ ] `unverified` array is empty or every entry has a valid reason
+
+### Accuracy Verification
+- [ ] Spot-checked code examples against actual source — confirmed they exist and are accurate (brief: 3+, medium: 5+, deep: 8+ or 20% of blocks)
+- [ ] Verified directory structure claims by checking actual directory listing
+- [ ] Version numbers read from config files (package.json/Cargo.toml/pyproject.toml), not README
+- [ ] API signatures verified against actual function definitions
+- [ ] No fabricated file paths, module names, or function names
+- [ ] Performance/benchmark claims only stated when source evidence exists
+
+### HTML
+- [ ] Interactive HTML generated for each depth level
+- [ ] Dark/light toggle works and persists
+- [ ] Sidebar navigation matches chapters
+- [ ] Expandable sections have content
+- [ ] Quiz questions have correct answers
+- [ ] No innerHTML used (DOM API only)
+- [ ] Mobile responsive
+- [ ] File is self-contained (no external dependencies)
+
+### Final
+- [ ] All files written to correct output directory
+- [ ] No placeholder or TODO content remaining
+- [ ] Quiz answers verified for correctness
