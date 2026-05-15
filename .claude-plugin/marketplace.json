@@ -1,0 +1,17 @@
+{
+  "name": "project-walkthrough-skill",
+  "owner": "zwyin",
+  "plugins": [
+    {
+      "name": "project-walkthrough",
+      "source": ".",
+      "description": "Generate structured technical walkthroughs of any software project. Multi-depth (brief/medium/deep), multi-audience (general/dev), multi-language (zh/en). Outputs markdown + interactive HTML.",
+      "version": "1.0.0",
+      "author": "zwyin",
+      "homepage": "https://github.com/zwyin/project-walkthrough-skill",
+      "license": "MIT",
+      "keywords": ["walkthrough", "documentation", "code-analysis", "architecture", "learning"],
+      "category": "development"
+    }
+  ]
+}

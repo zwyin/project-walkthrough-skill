@@ -4,24 +4,55 @@
 
 ## 功能
 
-- 多深度：brief（概览）、medium（进阶）、deep（深入）、all（全部）
-- 多受众：general（类比+白话）、dev（纯技术）
-- 输出：编号 markdown 章节 + 自包含交互式 HTML（暗色/亮色、侧边栏、quiz）
-- 自动探索协议：识别项目类型 → 读核心文件 → 提取创新点 → 生成章节
-- Manifest-first 准确性保证：先验证所有声明，再写内容，每个事实可追溯到源码
+- **多深度**：brief（概览）、medium（进阶）、deep（深入）、all（全部）
+- **多受众**：general（类比+白话）、dev（纯技术）
+- **多语言**：zh（中文正文+英文术语，默认）、en（纯英文）
+- **输出**：编号 markdown 章节 + 自包含交互式 HTML（暗色/亮色、侧边栏、quiz）
+- **自动探索协议**：识别项目类型 → 读核心文件 → 提取创新点 → 生成章节
+- **Manifest-first 准确性保证**：先验证所有声明，再写内容，每个事实可追溯到源码
 
 ## 安装
 
-将本目录作为 Claude Code plugin 引入，或在 `settings.json` 中配置 skill 路径。
+### Claude Code（推荐）
+
+```bash
+# 1. 添加 marketplace
+/plugin marketplace add zwyin/project-walkthrough-skill
+
+# 2. 安装插件
+/plugin install project-walkthrough@project-walkthrough-skill
+```
+
+安装后直接在任意项目中使用 `/project-walkthrough` 命令。
+
+### 手动安装
+
+将本仓库 clone 到本地，然后在 Claude Code 中指定 plugin 目录：
+
+```bash
+git clone https://github.com/zwyin/project-walkthrough-skill.git
+claude --plugin-dir ./project-walkthrough-skill
+```
+
+### 其他平台
+
+| 平台 | 安装方式 |
+|------|---------|
+| Gemini CLI | `gemini skills install https://github.com/zwyin/project-walkthrough-skill.git` |
+| OpenCode | clone 后复制到 `~/.opencode/skills/project-walkthrough/` |
+| Windsurf | clone 后复制到 `~/.windsurf/skills/project-walkthrough/` |
+
+> **注意：** Python 辅助脚本（`verify_sources.py`、`import_graph.py`）需要 Python 3 环境。在非 Claude Code 平台上，部分依赖脚本的功能可能需要手动调整路径。
 
 ## 用法
 
 ```
-/project-walkthrough                                              # Brief + general (CWD)
-/project-walkthrough /path/to/project                             # Brief + general
-/project-walkthrough /path/to/project --depth medium              # Medium + general
-/project-walkthrough /path/to/project --depth deep --audience dev # Deep + dev
-/project-walkthrough --depth all                                  # All depths + general (CWD)
+/project-walkthrough                                              # Brief + general + zh (CWD)
+/project-walkthrough /path/to/project                             # Brief + general + zh
+/project-walkthrough /path/to/project --depth medium              # Medium + general + zh
+/project-walkthrough /path/to/project --depth deep --audience dev # Deep + dev + zh
+/project-walkthrough --depth all                                  # All depths + general + zh (CWD)
+/project-walkthrough /path/to/project --lang en                   # Brief + general + en
 ```
 
 **参数说明：**
@@ -31,6 +62,7 @@
 | `[path]` | 目录路径 | 当前目录 | 项目目录 |
 | `--depth` | `brief`, `medium`, `deep`, `all` | `brief` | `brief` 概览 ~30min 7-8 文档；`medium` 进阶 ~60min 12-15 文档；`deep` 深入 ~120min 8-15 文档；`all` 依次生成三级 |
 | `--audience` | `general`, `dev` | `general` | `general` 类比+白话；`dev` 纯技术分析 |
+| `--lang` | `zh`, `en` | `zh` | `zh` 中文正文+英文术语；`en` 纯英文 |
 
 **语法规则：** 空格分隔（`--depth medium`），不支持 `--depth=medium`。无效值回退到默认。重复 flag 取最后一次。flags 大小写敏感。
 
@@ -53,14 +85,6 @@ project_study_<project-name>/
     └── deep-walkthrough.html
 ```
 
-## 示例
-
-`examples/` 下有多个示例项目：
-
-- **gstack** — 虚拟工程团队项目走读（brief + medium + deep 三层）
-- **superpowers** — AI 流程引擎项目走读（brief + medium + deep 三层）
-- **bat** / **zod** / **fastapi** — CLI 工具 / 库 / Web App 的 brief 级别示例
-
 ## 准确性机制
 
 核心原则：**verify before write**。通过 12 轮迭代验证建立：
@@ -74,27 +98,36 @@ project_study_<project-name>/
 ## 测试
 
 ```bash
-pytest tests/ -v                    # 185 个测试（结构 + manifest + 引用）
+pytest tests/ -v                    # 290 个测试（结构 + manifest + 引用）
 python scripts/verify_sources.py --check-all examples/ --strict  # manifest 验证
 ```
 
 ## 项目结构
 
 ```
-├── SKILL.md                          # Skill 定义（流程、规范、checklist）
+├── .claude-plugin/
+│   ├── plugin.json                 # Claude Code 插件元数据
+│   └── marketplace.json            # Marketplace 注册信息
+├── skills/
+│   └── project-walkthrough/
+│       └── SKILL.md                # Skill 定义（流程、规范、checklist）
 ├── docs/
-│   ├── html-reference.md             # HTML 模板和 CSS 组件规范
-│   ├── documentation-standards.md    # 文档写作和格式规范
-│   ├── chapter-templates.md          # 按项目类型的章节模板
-│   ├── exploration-protocol.md       # 探索协议
-│   ├── sources-manifest-schema.md    # Manifest schema 文档
+│   ├── html-reference.md           # HTML 模板和 CSS 组件规范
+│   ├── documentation-standards.md  # 文档写作和格式规范
+│   ├── chapter-templates.md        # 按项目类型的章节模板
+│   ├── exploration-protocol.md     # 探索协议
+│   ├── sources-manifest-schema.md  # Manifest schema 文档
 │   ├── sources-manifest.schema.json  # Manifest JSON Schema
-│   ├── accuracy-verification-protocol.md  # 准确性验证协议
-│   └── verification-reports/         # 12 轮验证报告
+│   └── accuracy-verification-protocol.md  # 准确性验证协议
 ├── scripts/
-│   ├── verify_sources.py             # Manifest 验证脚本
-│   └── import_graph.py              # 依赖图提取脚本
-├── examples/                         # 已生成的走读示例
+│   ├── verify_sources.py           # Manifest 验证脚本
+│   └── import_graph.py             # 依赖图提取脚本
 └── tests/
-    └── test_walkthrough_output.py    # 185 个输出验证测试
+    ├── test_walkthrough_output.py  # 输出验证测试
+    ├── test_verify_sources.py      # Manifest 验证测试
+    └── test_import_graph.py        # 依赖图测试
 ```
+
+## License
+
+MIT

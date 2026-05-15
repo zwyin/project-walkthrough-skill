@@ -1,7 +1,7 @@
 ---
 name: project-walkthrough
 description: Generate a structured technical walkthrough of any software project at configurable depth and audience levels. Outputs markdown docs + interactive HTML. Use when user wants to study, document, or share analysis of a codebase.
-argument-hint: "[path] [--depth brief|medium|deep|all] [--audience general|dev]"
+argument-hint: "[path] [--depth brief|medium|deep|all] [--audience general|dev] [--lang zh|en]"
 ---
 
 # Project Walkthrough Generator
@@ -11,7 +11,7 @@ Generate a structured technical walkthrough of any software project.
 ## Usage
 
 ```
-/project-walkthrough [path] [--depth brief|medium|deep|all] [--audience general|dev]
+/project-walkthrough [path] [--depth brief|medium|deep|all] [--audience general|dev] [--lang zh|en]
 ```
 
 **Argument parsing:** Parse `$ARGUMENTS` using `--flag` convention:
@@ -20,6 +20,7 @@ Generate a structured technical walkthrough of any software project.
 2. Tokens starting with `--` are flags:
    - `--depth <value>` — sets depth (`brief`, `medium`, `deep`, `all`)
    - `--audience <value>` — sets audience (`general`, `dev`)
+   - `--lang <value>` — sets output language (`zh`, `en`)
    - Only space-separated `--flag value` syntax is supported (not `--flag=value`)
    - Flags are case-sensitive (`--Depth` is not `--depth`)
    - A flag always consumes exactly the next token as its value, regardless of what that token contains
@@ -30,25 +31,28 @@ Generate a structured technical walkthrough of any software project.
 3. The first non-flag token that is not consumed as a flag value is the `path`
 4. Additional non-flag tokens are ignored
 5. Flags can appear before or after the path
-6. Defaults: path → current working directory, depth → `brief`, audience → `general`
+6. Defaults: path → current working directory, depth → `brief`, audience → `general`, lang → `zh`
 
 **Parameters:**
 - `path` (positional, optional) — Project directory. Defaults to current working directory.
 - `--depth` (optional) — One of: `brief`, `medium`, `deep`, `all`. Defaults to `brief`.
 - `--audience` (optional) — One of: `general`, `dev`. Defaults to `general`.
+- `--lang` (optional) — One of: `zh`, `en`. Defaults to `zh`.
 
 Invalid or missing flag values fall back to defaults. If a flag is repeated, the last occurrence wins.
 
 **Examples:**
 ```
-/project-walkthrough                                              # Brief + general (CWD)
-/project-walkthrough /path/to/project                             # Brief + general
-/project-walkthrough /path/to/project --depth medium              # Medium + general
-/project-walkthrough /path/to/project --depth deep --audience dev # Deep + dev
-/project-walkthrough --depth deep                                 # Deep + general (CWD)
-/project-walkthrough --audience dev                               # Brief + dev (CWD)
-/project-walkthrough --depth all --audience dev                   # All depths + dev (CWD)
-/project-walkthrough ./deep --depth brief                         # Path "./deep", brief + general
+/project-walkthrough                                              # Brief + general + zh (CWD)
+/project-walkthrough /path/to/project                             # Brief + general + zh
+/project-walkthrough /path/to/project --depth medium              # Medium + general + zh
+/project-walkthrough /path/to/project --depth deep --audience dev # Deep + dev + zh
+/project-walkthrough --depth deep                                 # Deep + general + zh (CWD)
+/project-walkthrough --audience dev                               # Brief + dev + zh (CWD)
+/project-walkthrough --depth all --audience dev                   # All depths + dev + zh (CWD)
+/project-walkthrough ./deep --depth brief                         # Path "./deep", brief + general + zh
+/project-walkthrough /path/to/project --lang en                   # Brief + general + en
+/project-walkthrough --depth deep --lang en                       # Deep + general + en (CWD)
 ```
 
 ## Audience Modes
@@ -67,6 +71,31 @@ What changes:
 ### `dev`
 
 For software engineers. Technical terms used directly, code blocks analyzed line by line, no analogy overhead. Best for contributors and architects evaluating the approach.
+
+## Language Modes
+
+### `zh` (default)
+
+Chinese body text + English technical terms inline. The most readable format for Chinese-speaking users, regardless of the source project's language.
+
+What this means:
+- Chapter text, explanations, analysis, and quiz questions written in Chinese
+- Technical terms (middleware, hook, schema, plugin) kept in English, with Chinese annotation on first appearance
+- Code comments in examples match the source code's language (not translated)
+- Architecture diagram labels in Chinese; technical identifiers (file names, function names) in English
+- `// Simplified from: path:lines` citations remain in English
+- 类比理解 cards (general audience) in Chinese
+- Code block summaries (general audience) in Chinese
+
+### `en`
+
+Pure English output. Follows the source project's language for maximum accuracy. Best for sharing with international audiences.
+
+What this means:
+- All text in English
+- Technical terms used directly
+- No Chinese annotations
+- Standard English technical writing style
 
 ## Depth Levels
 
@@ -163,7 +192,7 @@ project_study_<project-name>/
 
 ### Phase 1: Explore (~15% of time)
 
-Follow the protocol in `docs/exploration-protocol.md`. In summary:
+Follow the protocol in `../../docs/exploration-protocol.md`. In summary:
 
 1. **Identify project type** — AI tool / Library / Web app / CLI tool
 2. **Read core files** — README, ARCHITECTURE, CLAUDE.md/GEMINI.md, package.json, config files
@@ -175,7 +204,7 @@ Follow the protocol in `docs/exploration-protocol.md`. In summary:
 
 ### Phase 2: Plan (~10% of time)
 
-1. **Select chapter template** from `docs/chapter-templates.md` based on project type
+1. **Select chapter template** from `../../docs/chapter-templates.md` based on project type
 2. **Adapt template** to the specific project — rename, reorder, add project-specific chapters
 3. **Map each chapter to source files** — which files provide the content for each chapter
 4. **Plan cross-references** — which chapters reference which others
@@ -204,7 +233,7 @@ For each chapter, BEFORE writing any content:
      ```
      For files > 2,000 lines, use ranges ("40+") or vague language ("dozens of").
    - Architecture claim: Find the source file that supports this claim. Record the file and line range. If the claim is "X calls Y" or "X is used by Z", verify the actual import/call, not just that both files exist.
-   - Architecture diagrams: Run `python scripts/import_graph.py <source_dir>` to extract the ACTUAL import dependency graph. Draw diagrams from the script output, NOT from directory structure. The script detects parallel siblings (modules sharing a dependency without importing each other).
+   - Architecture diagrams: Run `python ../../scripts/import_graph.py <source_dir>` to extract the ACTUAL import dependency graph. Draw diagrams from the script output, NOT from directory structure. The script detects parallel siblings (modules sharing a dependency without importing each other).
    - Dependency: Find the actual import statement in source. Record it.
    - Priority/ordering chains: When describing fallback chains (e.g., "config priority: CLI > env > file"), read the actual code that implements this chain. Do not assume the order.
    - Source citation accuracy: Always use `// Simplified from: path:lines`. Do NOT use `// Source:`.
@@ -214,7 +243,7 @@ For each chapter, BEFORE writing any content:
 
 **Output of Phase 3A:** A `sources-manifest.json` with all verified claims populated. `doc_file` and `doc_line` will be filled in Phase 3B.
 
-**Manifest schema:** See `docs/sources-manifest-schema.md` for human-readable docs, or `docs/sources-manifest.schema.json` for the machine-readable JSON Schema. Each entry has:
+**Manifest schema:** See `../../docs/sources-manifest-schema.md` for human-readable docs, or `../../docs/sources-manifest.schema.json` for the machine-readable JSON Schema. Each entry has:
 - `id` — unique identifier (claim-001, claim-002, ...)
 - `type` — one of: `code_example`, `directory_structure`, `api_signature`, `version_number`, `architecture_claim`, `dependency_claim`, `config_claim`, `feature_claim`, `performance_claim`
 - `source_file` + `source_lines` — exact file path and line range in the source project
@@ -254,7 +283,7 @@ After all chapters are written:
    - The end line number is <= the file's total line count (no off-by-one errors)
    - The range covers the code you described (not too narrow, not exceeding file bounds)
    - When in doubt, use a smaller range
-5. **Run verification script** — `python scripts/verify_sources.py <manifest> --source-dir <source>` must pass
+5. **Run verification script** — `python ../../scripts/verify_sources.py <manifest> --source-dir <source>` must pass
 
 #### If `all` depth
 
@@ -275,7 +304,7 @@ For the detailed verification procedure for each claim type (code blocks, direct
 ### Phase 4: Generate HTML (~30% of time)
 
 1. One self-contained HTML file per depth level
-2. Follow the structure in `docs/html-reference.md`
+2. Follow the structure in `../../docs/html-reference.md`
 3. Key requirements:
    - DOM API only (createElement, textContent, addEventListener) — **never innerHTML**
    - Dark/light toggle (localStorage)
@@ -300,7 +329,7 @@ For the detailed verification procedure for each claim type (code blocks, direct
 
 ## Documentation Standards
 
-See `docs/documentation-standards.md` for:
+See `../../docs/documentation-standards.md` for:
 - Language conventions (Chinese/English/technical terms)
 - Chapter structure requirements
 - Source citation format (`// Simplified from: path:lines`)

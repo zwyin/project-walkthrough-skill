@@ -5,14 +5,32 @@ Extracted from `SKILL.md` to keep the skill definition focused on process.
 
 ## Language
 
-- Write in the same language as the project's documentation
-- If project docs are English, write in English
-- If project docs are Chinese, write in Chinese
-- If mixed, default to Chinese (this is the primary audience)
-- **Technical terms:** Keep standard terms in their original form (e.g., "middleware", "hook", "schema"). Don't translate well-known technical vocabulary.
+The output language is controlled by the `--lang` parameter (default: `zh`).
+
+### `zh` mode (Chinese body + English terms)
+
+- **Default mode.** Write all explanatory text in Chinese regardless of the source project's language.
+- **Technical terms:** Keep standard terms in English (e.g., "middleware", "hook", "schema", "plugin", "CI/CD"). On first appearance, add a brief Chinese annotation in parentheses if the term might be unfamiliar.
 - **Code comments in examples:** Match the style of the actual source code. If source uses English comments, keep English. If Chinese, keep Chinese.
-- **Architecture diagrams:** Labels in the same language as the chapter text. Technical identifiers (file names, function names) always stay in English.
-- **Audience-specific variants:** `brief-general` uses more analogies and fewer technical terms. `brief-dev` uses precise technical language. This applies regardless of language.
+- **Architecture diagrams:** Labels in Chinese. Technical identifiers (file names, function names, module names) always stay in English.
+- **Source citations:** `// Simplified from: path:lines` stays in English.
+- **Quiz questions and explanations:** Written in Chinese.
+- **类比理解 cards:** Written in Chinese.
+- **Code block summaries:** Written in Chinese.
+
+### `en` mode (Pure English)
+
+- Write all text in English.
+- Technical terms used directly, no translation needed.
+- Follow standard English technical writing conventions.
+- Code comments match source code style.
+
+### Common rules (both modes)
+
+- **File names, function names, module names, variable names** always stay in English (these are code identifiers, not prose).
+- **Version numbers** always from config files (`package.json` / `Cargo.toml` / `pyproject.toml`), never from README.
+- **Directory trees** show actual paths in English.
+- **Source citation format** is always `// Simplified from: path:lines`.
 
 ## Structure
 
@@ -49,6 +67,27 @@ Add these elements when audience is `general`:
 ```
 这段代码的作用：在网页内容中插入一个唯一的"标记"，
 如果 AI 被骗后把这个标记说出来了，就说明攻击成功。
+```
+
+When `--lang en`, replace 类比理解 cards with **Analogy** cards in English:
+```
+┌─────────────────────────────────────────┐
+│ 💡 Analogy                              │
+│                                         │
+│ Prompt injection ≈ phishing emails      │
+│                                         │
+│ Just as phishing emails trick you into   │
+│ clicking malicious links, prompt         │
+│ injection tricks AI into executing       │
+│ malicious instructions hidden in web     │
+│ content.                                │
+└─────────────────────────────────────────┘
+```
+
+And code block summaries in English:
+```
+What this code does: Inserts a unique marker into web content.
+If the AI reveals the marker, the attack succeeded.
 ```
 
 ## Audience: `dev` mode specifics
