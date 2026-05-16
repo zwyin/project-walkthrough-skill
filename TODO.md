@@ -42,9 +42,9 @@
 ## 待办
 
 ### 近期
-- [ ] 端到端验证：用更新后的 skill 对新项目生成 walkthrough，确认 `--lang zh` 和 `--lang en` 模式都正常工作
+- [x] 端到端验证：用本项目自身生成 walkthrough，`--lang zh` 和 `--lang en` 模式均通过验证（2026-05-17）
 - [x] GitHub 仓库创建：`project-walkthrough-skill`
-- [ ] 在 Claude Code marketplace 上注册并测试安装流程
+- [ ] 在 Claude Code marketplace 上注册并测试安装流程（plugin.json + marketplace.json 已通过格式验证，需用户在 Claude Code 中执行 `/plugin marketplace add` 完成注册）
 - [x] 测试 fixtures 支持 CI（动态检测 tests/fixtures/ 或 examples/）
 
 ### 未来可考虑
@@ -56,4 +56,4 @@
 - [ ] `convert.sh` 跨平台转换脚本（如果用户量增长到值得维护）
 
 ### 样例制作
-- [ ] 制作示例 walkthrough，帮助用户直观理解产出物：用本项目自身 或 知名开源项目（如 openclaw 等）生成一个 demo，放在 README 或 examples/ 中展示
+- [x] 制作示例 walkthrough：用本项目自身生成 self-demo-zh 和 self-demo-en，已加入 examples/ 和 README（2026-05-17）
