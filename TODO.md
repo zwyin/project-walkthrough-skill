@@ -48,8 +48,8 @@
 - [x] 测试 fixtures 支持 CI（动态检测 tests/fixtures/ 或 examples/）
 
 ### 未来可考虑
-- [ ] Cursor 插件支持：生成 `.cursor/rules/` 的 `.mdc` 文件
-- [ ] Gemini CLI 一键安装支持：确保 `gemini skills install <url>` 可用
+- [x] Cursor 插件支持：生成 `cursor/project-walkthrough.mdc`（2026-05-17）
+- [x] Gemini CLI 一键安装支持：`gemini skills install <url> --path skills/project-walkthrough` 已验证格式兼容（2026-05-17）
 - [ ] OpenCode / Windsurf 兼容性测试
 - [ ] gstack/superpowers 的 manifest 验证（当前 MANIFEST_PROJECTS 硬编码排除）
 - [ ] 更多项目类型模板（游戏引擎、数据库、编译器等）
