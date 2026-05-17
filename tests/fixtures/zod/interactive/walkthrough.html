@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zod 项目走读 — Brief</title>
+<style>
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#252836;--border:#2e3141;--text:#e2e4ed;--text2:#9da2b4;--accent:#7c6aef;--accent2:#a78bfa;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;--orange:#f97316}
+html.light{--bg:#f8f9fc;--surface:#ffffff;--surface2:#f1f3f8;--border:#dde0ea;--text:#1a1d27;--text2:#5c6070;--accent:#7c6aef;--accent2:#6d5ad8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+.theme-toggle{position:fixed;top:12px;right:12px;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px;display:flex;gap:4px;font-size:13px}
+.theme-toggle span{padding:4px 10px;border-radius:4px;cursor:pointer;color:var(--text2)}
+.theme-toggle span.active{background:var(--accent);color:#fff}
+.sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:50px 0 20px}
+.sidebar-title{padding:8px 16px;font-size:14px;font-weight:700;color:var(--accent);border-bottom:1px solid var(--border)}
+.sidebar-title span{display:block;font-size:11px;color:var(--text2);font-weight:400;margin-top:2px}
+.nav-item{display:block;padding:8px 16px;color:var(--text2);text-decoration:none;font-size:13px;cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:var(--surface2)}
+.nav-num{display:inline-block;width:20px;text-align:center;font-weight:600;margin-right:4px}
+.main{margin-left:220px;padding:40px 32px;max-width:860px}
+.section{display:none}
+.section.active{display:block}
+h1{font-size:24px;margin-bottom:4px}
+h1 .depth-badge{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--green);color:#000;font-weight:600;vertical-align:middle;margin-left:8px}
+h2{font-size:18px;margin:24px 0 12px;color:var(--accent2)}
+p,.subtitle{color:var(--text2);margin-bottom:12px}
+.subtitle{font-size:15px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
+.card-title{font-weight:600;margin-bottom:8px}
+.code-block{background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:14px;margin:12px 0;font-family:'Fira Code',monospace;font-size:13px;overflow-x:auto;line-height:1.5;white-space:pre}
+html.light .code-block{background:#f6f8fa}
+.styled-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+.styled-table th,.styled-table td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+.styled-table th{background:var(--surface2);font-weight:600}
+.expandable{border:1px solid var(--border);border-radius:6px;margin:12px 0;overflow:hidden}
+.expandable-header{padding:10px 14px;background:var(--surface2);cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:500}
+.expandable-header .arrow{transition:transform .2s}
+.expandable-header.open .arrow{transform:rotate(90deg)}
+.expandable-body{display:none;padding:14px;border-top:1px solid var(--border)}
+.expandable-body.open{display:block}
+.flow{display:flex;flex-direction:column;align-items:center;gap:8px;margin:16px 0}
+.flow-node{padding:10px 20px;border-radius:6px;text-align:center;font-size:13px;font-weight:500;min-width:200px}
+.flow-node.process{background:var(--surface);border:1px solid var(--orange);color:var(--orange)}
+.flow-node.result{background:var(--surface);border:1px solid var(--green);color:var(--green)}
+.flow-arrow{color:var(--text2);font-size:18px}
+.section-nav{display:flex;justify-content:space-between;margin-top:40px;padding-top:20px;border-top:1px solid var(--border)}
+.section-nav button{padding:8px 20px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:13px}
+.section-nav button:hover{background:var(--accent);color:#fff}
+.quiz-option{display:block;width:100%;text-align:left;padding:10px 14px;margin:4px 0;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:13px;transition:all .15s}
+.quiz-option:hover:not(:disabled){border-color:var(--accent)}
+.quiz-option:disabled{cursor:default;opacity:.7}
+.quiz-option.correct{background:#22c55e20;border-color:var(--green);color:var(--green)}
+.quiz-option.wrong{background:#ef444420;border-color:var(--red);color:var(--red)}
+.quiz-feedback{margin:8px 0 16px;padding:8px 12px;border-radius:4px;font-size:13px}
+.quiz-feedback.correct{background:#22c55e15;color:var(--green)}
+.quiz-feedback.wrong{background:#ef444415;color:var(--red)}
+.mobile-toggle{display:none;position:fixed;top:12px;left:12px;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;color:var(--text);font-size:18px}
+@media(max-width:768px){.sidebar{display:none;position:fixed;z-index:50;width:240px}.sidebar.open{display:block}.main{margin-left:0;padding:60px 16px}.mobile-toggle{display:block}.flow-node{min-width:140px}}
+@media print{.sidebar,.theme-toggle,.mobile-toggle,.section-nav{display:none}.main{margin-left:0}.section{display:block!important}}
+</style>
+</head>
+<body>
+<div class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776;</div>
+<div class="theme-toggle" onclick="toggleTheme()"><span id="btn-dark" class="active">暗色</span><span id="btn-light">亮色</span></div>
+<nav class="sidebar" id="sidebar"></nav>
+<div class="main" id="main"></div>
+<script>
+function toggleTheme(){var h=document.documentElement,dk=document.getElementById('btn-dark'),lt=document.getElementById('btn-light');if(h.classList.contains('light')){h.classList.remove('light');dk.classList.add('active');lt.classList.remove('active');localStorage.setItem('theme','dark')}else{h.classList.add('light');lt.classList.add('active');dk.classList.remove('active');localStorage.setItem('theme','light')}}
+if(localStorage.getItem('theme')==='light'){document.documentElement.classList.add('light');document.getElementById('btn-light').classList.add('active');document.getElementById('btn-dark').classList.remove('active')}
+
+var chapters=[
+{id:'s0',num:'0',title:'阅读指南'},
+{id:'s1',num:'1',title:'总览'},
+{id:'s2',num:'2',title:'类型系统设计'},
+{id:'s3',num:'3',title:'验证引擎'},
+{id:'s4',num:'4',title:'Schema 类型体系'},
+{id:'s5',num:'5',title:'微型 Bundle 架构'},
+{id:'s6',num:'6',title:'创新总结'},
+{id:'sq',num:'Q',title:'Quiz'}
+];
+
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e}
+function txt(text){return document.createTextNode(text)}
+
+function buildSidebar(){
+var sb=document.getElementById('sidebar');
+var t=el('div','sidebar-title');t.textContent='Zod 走读';
+t.appendChild(el('span','','BRIEF'));sb.appendChild(t);
+chapters.forEach(function(ch){
+var a=el('a','nav-item'+(ch.id==='s0'?' active':''));
+a.setAttribute('data-section',ch.id);
+a.addEventListener('click',function(){showSection(ch.id)});
+a.appendChild(el('span','nav-num',ch.num));
+a.appendChild(txt(ch.title));sb.appendChild(a)})}
+
+function showSection(id){
+document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active')});
+document.getElementById(id).classList.add('active');
+document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
+var nav=document.querySelector('.nav-item[data-section="'+id+'"]');if(nav)nav.classList.add('active');
+document.getElementById('sidebar').classList.remove('open');window.scrollTo(0,0)}
+
+function navBtns(cur){
+var idx=chapters.findIndex(function(c){return c.id===cur});
+var prev=idx>0?chapters[idx-1].id:null;
+var next=idx<chapters.length-1?chapters[idx+1].id:null;
+var d=el('div','section-nav');
+if(prev){var b=el('button','','← 上一章');b.addEventListener('click',function(){showSection(prev)});d.appendChild(b)}else{d.appendChild(el('span'))}
+if(next){var b2=el('button','','下一章 →');b2.addEventListener('click',function(){showSection(next)});d.appendChild(b2)}
+return d}
+
+function makeTable(rows){
+var tb=el('table','styled-table');
+rows.forEach(function(row,i){
+var tr=el('tr');
+row.forEach(function(cell){tr.appendChild(i===0?el('th','',cell):el('td','',cell))});
+tb.appendChild(tr)});return tb}
+
+function toggleExpand(id){var e=document.getElementById(id);e.querySelector('.expandable-header').classList.toggle('open');e.querySelector('.expandable-body').classList.toggle('open')}
+
+function makeExpandable(title,bodyEl,id){
+var d=el('div','expandable');d.id=id;
+var hd=el('div','expandable-header');
+hd.appendChild(el('span','',title));
+var ar=el('span','arrow','▶');hd.appendChild(ar);
+hd.addEventListener('click',function(){toggleExpand(id)});
+var bd=el('div','expandable-body');bd.appendChild(bodyEl);
+d.appendChild(hd);d.appendChild(bd);return d}
+
+function buildSections(){
+var main=document.getElementById('main');
+
+// S0
+var s0=el('div','section active');s0.id='s0';
+var h0=el('h1','','Zod 项目走读 ');h0.appendChild(el('span','depth-badge','BRIEF'));s0.appendChild(h0);
+s0.appendChild(el('p','subtitle','TypeScript 优先的 schema 验证库 — 6 章概览'));
+var c0=el('div','card');
+c0.appendChild(el('div','card-title','适合谁'));
+var ul0=el('ul');
+['评估是否在项目中采用 Zod','理解 Zod 的核心设计理念','快速了解 Zod 与竞品的差异'].forEach(function(t){ul0.appendChild(el('li','',t))});
+c0.appendChild(ul0);s0.appendChild(c0);
+var c0b=el('div','card');c0b.appendChild(el('div','card-title','章节导航'));
+var ol0=el('ol');
+['总览 — 一句话概括 + 项目结构 + 技术栈','类型系统 — 双层架构 + 类型推断 + input/output 分离','验证引擎 — parse 链路 + 错误系统 + 国际化','Schema 类型 — 基础/复合/高级类型全覆盖','微型 Bundle — core/classic/mini 三层设计','创新总结 — 五大创新 + 竞品对比'].forEach(function(t){ol0.appendChild(el('li','',t))});
+c0b.appendChild(ol0);s0.appendChild(c0b);
+s0.appendChild(navBtns('s0'));main.appendChild(s0);
+
+// S1
+var s1=el('div','section');s1.id='s1';
+s1.appendChild(el('h1','','总览'));
+s1.appendChild(el('p','subtitle','Zod — schema 定义 = 运行时校验 + 编译时类型'));
+var c1=el('div','card');c1.appendChild(el('div','card-title','核心价值'));
+c1.appendChild(el('p','','TypeScript 只在编译时检查类型，运行时的 any 毫无防护。Zod 让你定义一个 schema，同时获得运行时验证和编译时类型推断——一个定义两处生效。'));
+s1.appendChild(c1);
+s1.appendChild(el('pre','code-block','const User = z.object({\n  name: z.string().min(1),\n  email: z.string().email(),\n  age: z.number().int().positive().optional()\n});\n\ntype User = z.infer<typeof User>;\n// 自动推断: { name: string; email: string; age?: number }'));
+s1.appendChild(makeTable([['技术','用途'],['TypeScript','核心语言，ES modules'],['pnpm workspace','monorepo 管理'],['esbuild / rollup','构建打包'],['Vitest','测试框架'],['零外部依赖','核心包无任何 runtime dep']]));
+s1.appendChild(makeExpandable('项目结构',el('pre','code-block','packages/\n├── zod/src/\n│   ├── v4/core/     ← 核心引擎 (~2KB gzip)\n│   ├── v4/classic/  ← 完整 API\n│   ├── v4/mini/     ← 最小化 bundle\n│   ├── v4/locales/  ← 国际化\n│   └── v3/          ← 旧版兼容\n├── bench/           ← 性能基准\n├── docs/            ← 文档站\n└── integration/     ← 集成测试'),'ex-struct'));
+s1.appendChild(navBtns('s1'));main.appendChild(s1);
+
+// S2
+var s2=el('div','section');s2.id='s2';
+s2.appendChild(el('h1','','类型系统设计'));
+s2.appendChild(el('p','subtitle','一套 schema 定义同时产出运行时验证和编译时类型'));
+var c2=el('div','card');c2.appendChild(el('div','card-title','双层架构'));
+c2.appendChild(el('pre','code-block','┌─ Classic API 层 ─────────────┐\n│  z.string() z.object() ...   │  ← 用户写的\n├─ Core 引擎 ──────────────────┤\n│  $ZodType, $constructor      │  ← 内部机制\n├─ TypeScript 类型推断 ────────┤\n│  z.infer<T>, z.output<T>     │  ← 编译时\n└──────────────────────────────┘'));
+s2.appendChild(c2);
+s2.appendChild(makeExpandable('$ZodType 基类 (核心源码)',el('pre','code-block','interface $ZodType {\n  _zid: string;           // 唯一 ID\n  _def: $ZodDef;          // schema 定义\n  parse(input): unknown;  // 同步解析\n  safeParse(input): SafeResult;\n  optional(): $ZodType;\n  nullable(): $ZodType;\n}'),'ex-zodtype'));
+s2.appendChild(makeExpandable('Input/Output 类型分离 (v4)',el('pre','code-block','const schema = z.object({\n  age: z.coerce.number()  // 输入 string → 输出 number\n});\ntype In  = z.input<typeof schema>;   // { age: string }\ntype Out = z.output<typeof schema>;  // { age: number }'),'ex-io'));
+s2.appendChild(navBtns('s2'));main.appendChild(s2);
+
+// S3
+var s3=el('div','section');s3.id='s3';
+s3.appendChild(el('h1','','验证引擎'));
+s3.appendChild(el('p','subtitle','从 .parse() 到输出结果的完整链路'));
+var fl=el('div','flow');
+['预处理 (coerce)','类型检查 (核心校验)','后处理 (refine/transform)'].forEach(function(t){
+fl.appendChild((function(){var n=el('div','flow-node process');n.textContent=t;return n})());
+fl.appendChild(el('div','flow-arrow','↓'))});
+fl.appendChild((function(){var n=el('div','flow-node result');n.textContent='返回 typed data / $ZodError';return n})());
+s3.appendChild(fl);
+s3.appendChild(makeExpandable('错误系统 ($ZodError)',(function(){var c=el('div');c.appendChild(el('pre','code-block','interface $ZodIssue {\n  code: string;              // 错误类型码\n  message: string;           // 人类可读消息\n  path: (string|number)[];   // 数据路径\n  expected?: string;         // 期望类型\n  received?: string;         // 实际类型\n}'));c.appendChild(el('p','','错误提供 tree format（按路径嵌套）和 flat format（扁平列表）两种视图。v4 内置国际化。'));return c})(),'ex-error'));
+s3.appendChild(navBtns('s3'));main.appendChild(s3);
+
+// S4
+var s4=el('div','section');s4.id='s4';
+s4.appendChild(el('h1','','Schema 类型体系'));
+s4.appendChild(el('p','subtitle','从基础类型到高级组合子的完整类型动物园'));
+s4.appendChild(makeTable([['Schema','TS 类型','特性'],['z.string()','string','min/max/email/url/uuid'],['z.number()','number','int/positive/negative'],['z.object()','object','pick/omit/extend/partial'],['z.array()','T[]','min/max/nonempty'],['z.union()','A|B','discriminatedUnion 更优']]));
+s4.appendChild(makeExpandable('高级特性',(function(){var c=el('div');c.appendChild(el('p','','Branded Types — 名义类型'));c.appendChild(el('pre','code-block','const Email = z.string().email().brand<"Email">();\ntype Email = z.infer<typeof Email>;'));c.appendChild(el('p','','JSON Schema 双向互转'));c.appendChild(el('pre','code-block','z.toJsonSchema(schema);  // Zod → JSON Schema\nz.fromJsonSchema(json);  // JSON Schema → Zod'));return c})(),'ex-adv'));
+s4.appendChild(navBtns('s4'));main.appendChild(s4);
+
+// S5
+var s5=el('div','section');s5.id='s5';
+s5.appendChild(el('h1','','微型 Bundle 架构'));
+s5.appendChild(el('p','subtitle','core 2KB gzip + classic 完整 API + mini 按需裁剪'));
+var c5=el('div','card');c5.appendChild(el('div','card-title','三层设计'));
+c5.appendChild(el('pre','code-block','zod (classic) — 完整 API，适合大多数场景\nzod/mini    — 最小子集，去掉格式化/coerce/brand\nzod/core    — $ZodType + parse + $ZodError (~2KB gzip)'));
+s5.appendChild(c5);
+s5.appendChild(makeExpandable('v3 vs v4',makeTable([['维度','v3','v4'],['架构','单体','core + classic + mini'],['Core gzip','~13KB','~2KB'],['Tree-shaking','无','per-type 模块']]),'ex-v3v4'));
+s5.appendChild(navBtns('s5'));main.appendChild(s5);
+
+// S6
+var s6=el('div','section');s6.id='s6';
+s6.appendChild(el('h1','','创新总结'));
+s6.appendChild(el('p','subtitle','重新定义了 TypeScript 优先验证库该是什么样'));
+['Schema = Type + Validator — 一个定义两处生效','Input/Output 类型分离 — coerce/transform 场景的类型安全','微型 Bundle — core 2KB，可跑在 Workers/浏览器/移动端','JSON Schema 双向互转 — 成为 TypeScript 生态的类型中枢','错误作为一等公民 — 结构化 issue + 路径 + 国际化'].forEach(function(text,i){
+var c=el('div','card');c.style.borderLeft='3px solid var(--accent)';c.appendChild(el('div','card-title',text));s6.appendChild(c)});
+s6.appendChild(makeTable([['维度','Zod v4','Joi','Yup','Valibot'],['TS 推断','自动','无','基础','自动'],['零依赖','是','否','否','是'],['Core size','~2KB','~70KB','~20KB','~0.5KB'],['JSON Schema','内置','插件','插件','插件']]));
+s6.appendChild(navBtns('s6'));main.appendChild(s6);
+
+// Quiz
+var sq=el('div','section');sq.id='sq';
+sq.appendChild(el('h1','','Quiz — 检验你的理解'));
+var quizData=[
+{q:'Zod 的核心创新是什么？',o:['运行时最快的验证库','Schema 定义同时产出运行时验证和编译时类型','支持最多数据类型的验证库','最小的 JavaScript 库'],c:1,e:'Zod 的核心是 schema = type + validator，一个定义同时产出运行时校验和 TS 类型推断。'},
+{q:'z.input<> 和 z.output<> 的区别是什么？',o:['没有区别','input 是宽松类型，output 是严格类型','input 是原始输入类型，output 是 coerce/transform 后的类型','input 用于前端，output 用于后端'],c:2,e:'v4 的 input/output 分离解决 coerce：z.coerce.number() 的 input 是 string，output 是 number。'},
+{q:'Zod v4 的 core 层 gzip 后大约多大？',o:['~13KB','~20KB','~2KB','~0.5KB'],c:2,e:'v4 core 只含 $ZodType、parse、$ZodError 等基础抽象，gzip 约 2KB。v3 是 ~13KB。'},
+{q:'$ZodIssue 的 path 字段是什么？',o:['文件路径','数据中出错位置的路径','URL 路由','模块路径'],c:1,e:'path 是数据路径如 ["user","email"]，精确定位嵌套数据中验证失败的位置。'},
+{q:'Zod mini 层裁掉了什么？',o:['所有类型定义','TS 类型推断','错误格式化/coerce/brand/JSON Schema','异步验证支持'],c:2,e:'mini 保留核心类型但去掉格式化、coerce、brand、JSON Schema 等非核心功能。'}
+];
+var qc=el('div','card');
+quizData.forEach(function(item,idx){
+var w=el('div');w.style.marginBottom='20px';
+w.appendChild((function(){var d=el('div');d.style.fontWeight='600';d.style.marginBottom='8px';d.textContent=(idx+1)+'. '+item.q;return d})());
+item.o.forEach(function(opt,oi){
+var btn=el('button','quiz-option',String.fromCharCode(65+oi)+'. '+opt);
+btn.addEventListener('click',function(){
+w.querySelectorAll('.quiz-option').forEach(function(b){b.disabled=true});
+var fb=el('div','quiz-feedback');
+if(oi===item.c){btn.classList.add('correct');fb.classList.add('correct');fb.textContent='正确！'+item.e}
+else{btn.classList.add('wrong');w.querySelectorAll('.quiz-option')[item.c].classList.add('correct');fb.classList.add('wrong');fb.textContent='不对。'+item.e}
+w.appendChild(fb)});w.appendChild(btn)});
+qc.appendChild(w)});
+sq.appendChild(qc);
+sq.appendChild(navBtns('sq'));main.appendChild(sq);
+}
+
+buildSidebar();
+buildSections();
+</script>
+</body>
+</html>

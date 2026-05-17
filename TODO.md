@@ -42,15 +42,18 @@
 ## 待办
 
 ### 近期
-- [ ] 端到端验证：用更新后的 skill 对新项目生成 walkthrough，确认 `--lang zh` 和 `--lang en` 模式都正常工作
-- [ ] GitHub 仓库重命名：`research_project-walkthrough` → `project-walkthrough-skill`
-- [ ] 在 Claude Code marketplace 上注册并测试安装流程
-- [ ] 更新测试中的路径引用（SKILL.md 新位置）
+- [x] 端到端验证：用本项目自身生成 walkthrough，`--lang zh` 和 `--lang en` 模式均通过验证（2026-05-17）
+- [x] GitHub 仓库创建：`project-walkthrough-skill`
+- [ ] 在 Claude Code marketplace 上注册并测试安装流程（plugin.json + marketplace.json 已通过格式验证，需用户在 Claude Code 中执行 `/plugin marketplace add` 完成注册）
+- [x] 测试 fixtures 支持 CI（动态检测 tests/fixtures/ 或 examples/）
 
 ### 未来可考虑
-- [ ] Cursor 插件支持：生成 `.cursor/rules/` 的 `.mdc` 文件
-- [ ] Gemini CLI 一键安装支持：确保 `gemini skills install <url>` 可用
+- [x] Cursor 插件支持：生成 `cursor/project-walkthrough.mdc`（2026-05-17）
+- [x] Gemini CLI 一键安装支持：`gemini skills install <url> --path skills/project-walkthrough` 已验证格式兼容（2026-05-17）
 - [ ] OpenCode / Windsurf 兼容性测试
 - [ ] gstack/superpowers 的 manifest 验证（当前 MANIFEST_PROJECTS 硬编码排除）
 - [ ] 更多项目类型模板（游戏引擎、数据库、编译器等）
 - [ ] `convert.sh` 跨平台转换脚本（如果用户量增长到值得维护）
+
+### 样例制作
+- [x] 制作示例 walkthrough：用本项目自身生成 self-demo-zh 和 self-demo-en，已加入 examples/ 和 README（2026-05-17）
